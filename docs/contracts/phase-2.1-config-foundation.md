@@ -145,11 +145,9 @@ interface GradingPeriod {
 }
 ```
 
-**Open question flagged below (#1)** — the design tokens file's
-`gradingPeriodState` has 5 states (`notStarted`, `open`, `submitted`,
-`approved`, `locked`), not 3. Recommendation and reasoning below; this is
-worth deciding before 2.2 because it's a schema shape choice, not a coat of
-paint.
+**Resolved (see §5 #1):** 3 states, confirmed 2026-08-13. `submitted`/
+`approved` from the design tokens' 5-value `gradingPeriodState` move to a
+future Phase 11 per-section submission record instead of living here.
 
 **Zod:**
 
@@ -204,7 +202,7 @@ built on top of this contract, not part of this document's endpoint list.
 
 ## 5. Open questions
 
-**#1 — GradingPeriod status: 3 states or 5?**
+**#1 — GradingPeriod status: 3 states or 5? RESOLVED 2026-08-13 → 3 states.**
 The design tokens (`irmmhs-design-tokens.json` →
 `color.domain.gradingPeriodState`) define `notStarted / open / submitted /
 approved / locked` as one enum, captioned "drives the quarter selector and

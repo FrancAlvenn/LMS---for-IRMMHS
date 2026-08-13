@@ -163,12 +163,21 @@ All 4 test runs (2 specs × 2 projects) pass locally.
 `GradingPeriod` models, all school-year-scoped). Start with the Phase 2.1
 contract prompt per playbook §7 before writing any implementation.
 
-<!-- BEGIN:nextjs-agent-rules -->
+### 2026-08-13 — Next.js agent-rules block moved to AGENTS.md
 
-# This is NOT the Next.js you know
+`next dev` (16.3+) auto-manages a "this is not the Next.js you know" block
+pointing agents at the version-matched docs bundled in
+`node_modules/next/dist/docs/`, and upserts it into whichever of
+`AGENTS.md` / `CLAUDE.md` already hosts it. It landed in this file first
+since `AGENTS.md` didn't exist yet — moved it there instead, since this
+file is the project constitution, not framework churn. `CLAUDE.md` now
+`@`-imports `AGENTS.md` (see bottom of this file) so both load together.
+**Do not delete `AGENTS.md` or strip its markers** — `next dev` re-adds
+them, and undocumented Next.js 16 API changes are a real risk worth
+actually reading up on before writing route handlers (dynamic route
+`params` are `Promise`-typed now — see the `RouteContext<'/path/[id]'>`
+helper — and there's a new opt-in caching model called Cache Components).
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+---
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+@AGENTS.md
