@@ -29,8 +29,22 @@ operable by non-technical school staff after handover.
 
 ## Conventions
 
-- Folder structure: [to be filled in once the Next.js scaffold lands — Step 1]
-- Naming: [fill in as patterns emerge]
+- Folder structure:
+  ```
+  src/
+    app/                    Next.js App Router — pages, layouts, route handlers
+      api/health/route.ts   example route handler: parse -> call service -> serialize
+    server/
+      db/                   connect.ts (cached Mongoose connection), schemaOptions.ts
+      services/             business logic, one file per domain concept — Phase 2+
+      repositories/         data access, one file per Mongoose model — Phase 2+
+      lib/                  server-only helpers (apiResponse.ts)
+    types/                  shared TS types (domain models, API contracts) — Phase 2+
+  playbook/                 project playbook + design tokens (reference, not code)
+  ```
+- Naming: kebab-case folders, camelCase filenames (`schoolYear.service.ts`), PascalCase
+  for React components. One Mongoose model per file in `server/repositories/`; the
+  service file of the same domain name is the only thing allowed to import it.
 - Every model gets: schoolYearId, createdAt, updatedAt, createdBy, updatedBy
 - Soft delete via `archivedAt`, never hard delete academic records
 - API responses: { data, error } — never bare arrays (see src/server/lib/apiResponse.ts)
