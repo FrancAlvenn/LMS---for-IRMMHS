@@ -1,7 +1,8 @@
 /**
- * Seed script (playbook Prompt 2.5): IRMMHS profile + the current school
- * year with its 4 quarters. Idempotent — safe to re-run; it skips
- * anything that already exists instead of erroring or duplicating.
+ * Seed script (playbook Prompt 2.5, extended by v2 Phase 2.3/2.7): IRMMHS
+ * profile + the current school year with its 4 quarters, plus (new) the
+ * two platform tenants. Idempotent — safe to re-run; it skips anything
+ * that already exists instead of erroring or duplicating.
  *
  * Run with: npm run seed
  * (invokes `tsx --env-file=.env.local scripts/seed.ts` — .env.local must
@@ -25,6 +26,21 @@
  * printed ONCE, only on the run that creates it — there is no default
  * password anywhere in this repo. mustChangePassword is true, so it must
  * be changed on first login regardless.
+ *
+ * v2 platform pivot addition (Phase 2.3/2.7): seeds two `Tenant` platform
+ * records — IRMMHS (tenant A, the reference school this repo is built
+ * for) and a fictional "Meridian International School" (tenant C from
+ * the playbook's reference table: trimesters, 4.0 GPA, no LRN, no DepEd
+ * forms, pass mark 50 — chosen over tenant B per contract §4 open
+ * question #5, since it's the reference school most likely to expose
+ * hard-coded assumptions early). Per Habit 4, this is now the permanent
+ * two-tenant development setup future phases build against.
+ *
+ * IMPORTANT — nothing below this point is tenant-scoped yet. `School`,
+ * `SchoolYear`, `GradingPeriod`, `User`, and `Role` are still the
+ * pre-pivot, single-tenant models (v2 Phase 3 and Phase 4 rebuild them).
+ * The two tenants seeded here exist as platform records only; nothing
+ * links IRMMHS's `School` document to the IRMMHS `Tenant` document yet.
  */
 import { randomBytes } from 'node:crypto';
 
@@ -36,10 +52,45 @@ import {
   findSchoolYearByLabel,
 } from '@/server/services/schoolYear.service';
 import { ensureAdminRole } from '@/server/services/role.service';
+import { ensureActiveTenant } from '@/server/services/tenant.service';
 import { changeOwnPassword, createUser, findUserByUsername } from '@/server/services/user.service';
 
 async function main() {
   console.log('Seeding IRMMHS SMS...\n');
+
+  const irmmhsTenant = await ensureActiveTenant(
+    {
+      slug: 'irmmhs',
+      displayName: 'IRMMHS',
+      officialName: null, // Phase 0: confirm the exact DepEd-register string
+      locale: 'en-PH',
+      timezone: 'Asia/Manila',
+      logoUrl: null,
+      contactEmail: null,
+      contactPhone: null,
+      externalIds: { depedSchoolId: '306715' },
+    },
+    null,
+  );
+  console.log(`- Tenant "${irmmhsTenant.slug}" ready (${irmmhsTenant.displayName}).`);
+
+  const meridianTenant = await ensureActiveTenant(
+    {
+      slug: 'meridian-intl',
+      displayName: 'Meridian International School',
+      officialName: 'Meridian International School',
+      locale: 'en',
+      // Fictional — deliberately not Asia/Manila, since the whole point of
+      // this tenant is to be the reference school least like IRMMHS.
+      timezone: 'UTC',
+      logoUrl: null,
+      contactEmail: null,
+      contactPhone: null,
+      externalIds: {}, // no LRN, no DepEd forms — nothing DepEd-shaped to record
+    },
+    null,
+  );
+  console.log(`- Tenant "${meridianTenant.slug}" ready (${meridianTenant.displayName}).`);
 
   let school = await getSchool();
   if (school) {
