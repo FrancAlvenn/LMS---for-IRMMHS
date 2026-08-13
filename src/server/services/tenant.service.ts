@@ -1,5 +1,6 @@
 import * as tenantRepository from '@/server/repositories/tenant.repository';
 import { ConflictError, InvalidTransitionError, NotFoundError } from '@/server/lib/errors';
+import { invalidateTenantCache } from '@/server/tenancy/resolveTenant';
 import type { Tenant, TenantCreate, TenantUpdate } from '@/types/tenant';
 
 // No route handlers call these yet — deferred to Phase 17 (Platform
@@ -42,6 +43,7 @@ export async function updateTenant(
   if (!updated) {
     throw new NotFoundError('Tenant not found.');
   }
+  invalidateTenantCache(updated.slug);
   return updated;
 }
 
@@ -56,6 +58,7 @@ export async function activateTenant(id: string, updatedBy: string | null): Prom
   if (!updated) {
     throw new NotFoundError('Tenant not found.');
   }
+  invalidateTenantCache(updated.slug);
   return updated;
 }
 
@@ -70,6 +73,10 @@ export async function suspendTenant(id: string, updatedBy: string | null): Promi
   if (!updated) {
     throw new NotFoundError('Tenant not found.');
   }
+  // Immediate effect, same property Phase 3 established for disabling a
+  // user: a suspended tenant should stop being reachable on its very next
+  // request, not linger until the resolver's cache TTL happens to expire.
+  invalidateTenantCache(updated.slug);
   return updated;
 }
 
@@ -82,6 +89,7 @@ export async function archiveTenant(id: string, updatedBy: string | null): Promi
   if (!updated) {
     throw new NotFoundError('Tenant not found.');
   }
+  invalidateTenantCache(updated.slug);
   return updated;
 }
 
