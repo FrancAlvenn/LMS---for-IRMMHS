@@ -34,6 +34,12 @@ yarn-error.log*
 .env*
 !.env.example
 
+# local credential scratch files — never commit real secrets
+playbook/creds.md
+playbook/atlas-credentials.env
+**/*credentials*
+**/creds.md
+
 # vercel
 .vercel
 
