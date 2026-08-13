@@ -26,6 +26,10 @@ operable by non-technical school staff after handover.
 - Auth.js (credentials provider, admin-provisioned accounts) — not installed yet, Phase 3
 - Zod at every API boundary — not installed yet, lands with the first real model contract
 - TypeScript (D2, confirmed 2026-08-13)
+- Vitest — unit tests on pure logic, colocated as `src/**/*.test.ts`
+- Playwright (chromium only) — E2E tests in `e2e/`, against Desktop Chrome and
+  Mobile Chrome (Pixel 7) device projects. Added ahead of the playbook's
+  original Phase 1 scope on 2026-08-13 — see decision log.
 
 ## Conventions
 
@@ -40,11 +44,16 @@ operable by non-technical school staff after handover.
       repositories/         data access, one file per Mongoose model — Phase 2+
       lib/                  server-only helpers (apiResponse.ts)
     types/                  shared TS types (domain models, API contracts) — Phase 2+
+  e2e/                      Playwright E2E specs (*.spec.ts) — separate from Vitest
   playbook/                 project playbook + design tokens (reference, not code)
   ```
 - Naming: kebab-case folders, camelCase filenames (`schoolYear.service.ts`), PascalCase
   for React components. One Mongoose model per file in `server/repositories/`; the
   service file of the same domain name is the only thing allowed to import it.
+- Testing split: Vitest unit tests are colocated next to the code they test
+  (`src/server/lib/apiResponse.test.ts`). Playwright E2E specs live in the
+  top-level `e2e/` folder instead of being colocated — they test the app as a
+  whole (real browser, real running server), not one module.
 - Every model gets: schoolYearId, createdAt, updatedAt, createdBy, updatedBy
 - Soft delete via `archivedAt`, never hard delete academic records
 - API responses: { data, error } — never bare arrays (see src/server/lib/apiResponse.ts)
@@ -128,6 +137,27 @@ still plaintext on disk.
 **Decisions still open, unchanged from kickoff:** D1 (real vs. portfolio),
 D5 (auth mechanics), D6 (JHS vs ALS schema shape). Phase 0 fieldwork also
 still outstanding.
+
+### 2026-08-13 — Playwright added ahead of schedule
+
+The playbook's Prompt 1.4 explicitly put Playwright/E2E out of scope for
+Phase 1 ("keep it minimal... component testing, Playwright, E2E tests" was
+deferred). The developer asked for it anyway before starting Phase 2, with
+its own dedicated folder — so it's in now rather than later. Deliberate
+scope expansion, logged per the playbook's own guardrail on accepted TODOs.
+
+**Built:** `@playwright/test`, chromium browser only (not firefox/webkit —
+add them later only if a real cross-browser bug shows up; no upfront cost
+for browsers nobody's using yet). `playwright.config.ts` at repo root,
+`testDir: './e2e'`, two projects — **Desktop Chrome** (registrar's machine)
+and **Mobile Chrome** via the Pixel 7 device profile (the teacher-on-Android
+case that matters most once Phase 11 ships). `webServer` auto-starts
+`npm run dev` and reuses an already-running one in local dev.
+`e2e/smoke.spec.ts` — homepage loads, `GET /api/health` reports
+`dbConnected: true` — mirrors the same acceptance check Phase 1 already
+verified manually, now automated. `npm run test:e2e` / `test:e2e:ui` /
+`test:e2e:report` scripts. `test-results/`, `playwright-report/` git-ignored.
+All 4 test runs (2 specs × 2 projects) pass locally.
 
 **Next up:** Phase 2 — Config foundation (`School`, `SchoolYear`,
 `GradingPeriod` models, all school-year-scoped). Start with the Phase 2.1
