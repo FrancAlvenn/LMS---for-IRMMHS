@@ -33,3 +33,15 @@ export class InvalidTransitionError extends HttpError {
     super(409, 'INVALID_TRANSITION', message);
   }
 }
+
+export class UnauthorizedError extends HttpError {
+  constructor(message = 'You must be signed in to do that.') {
+    super(401, 'UNAUTHORIZED', message);
+  }
+}
+
+export class ForbiddenError extends HttpError {
+  constructor(message = "You don't have permission to do that.") {
+    super(403, 'FORBIDDEN', message);
+  }
+}

@@ -1,5 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Unlike the Next.js app itself, the Playwright test runner doesn't load
+// .env.local automatically — tests that need E2E_TEST_PASSWORD (see
+// e2e/helpers/auth.ts) need it in this process's env too. Missing file
+// (e.g. CI without secrets) is fine; those specs skip themselves.
+try {
+  process.loadEnvFile('.env.local');
+} catch {
+  // no .env.local — fine, see above
+}
+
 /**
  * E2E tests live in e2e/, separate from the Vitest unit tests colocated
  * under src/**\/*.test.ts. Vitest covers pure logic (the grading engine,
@@ -14,6 +24,15 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // Capped at 1, not left to Playwright's CPU-count default: bcryptjs
+  // (chosen for zero native-build risk — see CLAUDE.md) hashes
+  // synchronously enough that several concurrent logins against a single
+  // `next dev` process reliably starve the event loop past Playwright's
+  // default timeouts, producing flaky failures that don't reproduce
+  // against a real deployment (verified by hand — see Phase 3 decision
+  // log). Revisit once E2E runs against a production build instead of
+  // `next dev`, or the login-heavy specs get their own isolated fixtures.
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: 'html',

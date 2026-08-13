@@ -23,7 +23,9 @@ operable by non-technical school staff after handover.
   are thin: parse -> authorize -> call service -> serialize.
 - MongoDB Atlas + Mongoose
 - Tailwind CSS + shadcn/ui (shadcn not installed yet — lands in Phase 4)
-- Auth.js (credentials provider, admin-provisioned accounts) — not installed yet, Phase 3
+- next-auth **v4** (stable — not v5, still beta as of 2026-08-13), Credentials
+  provider, JWT sessions, no DB adapter. bcryptjs for password hashing (pure
+  JS, no native build step). See decision log, Phase 3.
 - Zod at every API boundary — every route handler parses with a schema from `src/types/`
 - TypeScript (D2, confirmed 2026-08-13)
 - tsx — runs one-off TS scripts (`scripts/`) with `.env.local` loaded
@@ -39,14 +41,18 @@ operable by non-technical school staff after handover.
   src/
     app/                    Next.js App Router — pages, layouts, route handlers
       api/                  route handlers: parse -> authorize -> call service -> serialize
-      admin/                admin-only pages (unstyled until Phase 4; ungated until Phase 3)
+      api/auth/[...nextauth] next-auth's own catch-all — framework-owned, not handleRoute()
+      admin/                admin pages, real auth-gated since Phase 3 (proxy.ts + layout.tsx)
+      login/, change-password/  auth pages, deliberately unstyled until Phase 4
     server/
       db/                   connect.ts (cached Mongoose connection), schemaOptions.ts
       services/             business logic, one file per domain concept
       repositories/         data access + Mongoose schema, one file per model
-      lib/                  server-only helpers (apiResponse, errors, routeHandler, session)
+      lib/                  server-only helpers (apiResponse, errors, routeHandler,
+                             session — requirePermission()/getCurrentUser(), authOptions)
     types/                  shared TS types + Zod schemas (domain models, API contracts)
     hooks/                  client hooks (useSchoolYear, ...)
+    proxy.ts                optimistic route protection (Next 16 renamed Middleware -> Proxy)
   e2e/                      Playwright E2E specs (*.spec.ts) — separate from Vitest
   scripts/                  one-off TS scripts (seed.ts), run via `npm run seed` etc.
   docs/contracts/           Habit-3 contract docs — schema/Zod/endpoints, reviewed before code
@@ -66,10 +72,14 @@ operable by non-technical school staff after handover.
   connects to the DB, catches `ZodError` -> 400, `HttpError` subclasses
   (`NotFoundError`/`ConflictError`/`InvalidTransitionError`) -> their status, anything
   else -> 500. A service throws `NotFoundError` etc.; it never returns a Response.
-- No auth yet (Phase 3) — every route has a `// TODO(Phase 3): requirePermission(...)`
-  comment instead of enforcement. `src/server/lib/session.ts#getCurrentUserId()` is the
-  one place that becomes real; everything that needs `createdBy`/`updatedBy` already
-  calls it, so wiring up Auth.js later is a one-file change.
+- Auth is real as of Phase 3. `requirePermission('resource:action')`
+  (`src/server/lib/session.ts`) is what every former `// TODO(Phase 3)` comment
+  became — throws `UnauthorizedError`/`ForbiddenError`, `handleRoute()` maps both.
+  Permission strings are a hardcoded taxonomy (`src/types/permission.ts`) — code,
+  not data; which permissions a `Role` _has_ is data. `proxy.ts` only does
+  optimistic redirects (no session / must-change-password); every protected page
+  and route also checks for real, server-side (Next's own guidance: Proxy is
+  never the only auth check).
 - Every SY-scoped model gets: schoolYearId, createdAt, updatedAt, createdBy, updatedBy
   (createdBy/updatedBy nullable until Phase 3 — see above).
 - Soft delete via `archivedAt`, never hard delete academic records
@@ -234,6 +244,70 @@ still the Phase 0 web-sourced hypothesis, unconfirmed — see `scripts/seed.ts` 
 
 **Next up:** Phase 3 — Identity & access (Auth.js, real `requirePermission()`,
 replacing every `// TODO(Phase 3)` left in Phase 2's route handlers).
+
+### 2026-08-13 — Phase 3 (Identity & access) complete
+
+Built to the reviewed contract (`docs/contracts/phase-3.1-identity-access.md`):
+`User`, `Role`, the `Permission` taxonomy — repositories/services + 8 route
+handlers + Zod validators + unit tests, real next-auth v4 credentials/JWT auth,
+`proxy.ts` (optimistic redirects) backed by real server-side checks everywhere
+(admin layout, every route via `requirePermission()`), login + forced
+change-password pages, and bare `/admin/users` + `/admin/roles` pages.
+
+**Two more version-drift catches, same discipline as Phase 2 — checked the
+actual current docs/versions instead of assuming:**
+
+- **next-auth v5 is still beta** even now; `latest` on npm is v4.24.15. Asked
+  the developer explicitly rather than assuming v5 — chose v4 (stable) after
+  confirming both declare Next 16 peer support. See contract intro.
+- **Next 16 renamed Middleware to Proxy** (`proxy.ts`, not `middleware.ts` —
+  same mechanism). Would have written the wrong filename from training data;
+  caught by reading `node_modules/next/dist/docs/01-app/01-getting-started/
+16-proxy.md` before writing it, per the `AGENTS.md` block's whole point.
+
+**Two real security properties, verified by hand against live Atlas (not just
+typechecked) — see the contract's staleness trade-off in §4:**
+
+1. **Disabling a user takes effect on their very next request**, no
+   re-login required — confirmed live: disabled a signed-in test user,
+   their existing session immediately started reporting unauthenticated.
+2. **Permission changes on a role are picked up at next login, not
+   mid-session** — a deliberate, documented trade-off, not a bug.
+
+Also verified live: wrong-password rejection, the `isSystem` role guard
+(stripping `role:write`/`user:write` from Admin correctly 409s), 403 on a
+permission a role doesn't have, and the full
+create-account-with-temp-password → forced-redirect →
+`useSession().update()` → claim-refreshes-without-relogin flow end to end.
+
+**bcryptjs is deliberately CPU-heavy and it showed up in testing, not
+production:** parallel Playwright workers all logging into the same dev
+server flaked out from bcrypt+dev-compile contention starving the event
+loop. Not an app bug (12/12 pass serially, and every flow above was also
+verified by hand). Fixed by capping Playwright to `workers: 1` — see
+`playwright.config.ts` for the full reasoning and the revisit condition.
+
+**Seed script (`npm run seed`) now also creates:** the `"Admin"` system role
+(`isSystem: true`, all permissions, can't be stripped of `role:write`/
+`user:write`) and one `admin` user with a **randomly generated password
+printed once** — there is no default/predictable admin password anywhere in
+this repo. Also creates a fixed-password `e2e-test` fixture user when
+`E2E_TEST_PASSWORD` is set (dev/test-only — CI without that var just skips
+the specs that need it).
+
+**Known, accepted debris:** the E2E "fresh account" test creates a new
+throwaway user every run (no `DELETE /api/users` exists — deliberately out
+of scope per the contract, no forcing use case yet). These accumulate in
+the dev Atlas DB. Harmless, cleaned up manually this session; revisit if it
+becomes annoying rather than pre-building delete support nobody's asked for.
+
+**Decisions still open:** D1 (real vs. portfolio), D6 (JHS vs ALS schema
+shape). Phase 0 fieldwork also still outstanding. D5 (auth mechanics) is
+now resolved by this phase.
+
+**Next up:** Phase 4 — Design system & app shell (Tailwind theme from the
+real palette once Phase 0 delivers the logo, shadcn/ui, the nav shell — the
+first phase where these bare admin pages stop looking like a 1998 intranet).
 
 ---
 

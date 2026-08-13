@@ -19,7 +19,15 @@
  * build date (2026-08-13), SY 2025-2026 has already ended and 2026-2027
  * is the one actually in progress. Quarter dates are placeholders
  * (evenly-spaced guesses), not the real DepEd school calendar.
+ *
+ * Phase 3 addition: also seeds the "Admin" system role and one admin user
+ * (username "admin"). The admin's password is randomly generated and
+ * printed ONCE, only on the run that creates it — there is no default
+ * password anywhere in this repo. mustChangePassword is true, so it must
+ * be changed on first login regardless.
  */
+import { randomBytes } from 'node:crypto';
+
 import { disconnect } from '@/server/db/connect';
 import { createSchool, getSchool } from '@/server/services/school.service';
 import {
@@ -27,6 +35,8 @@ import {
   createSchoolYearWithPeriods,
   findSchoolYearByLabel,
 } from '@/server/services/schoolYear.service';
+import { ensureAdminRole } from '@/server/services/role.service';
+import { changeOwnPassword, createUser, findUserByUsername } from '@/server/services/user.service';
 
 async function main() {
   console.log('Seeding IRMMHS SMS...\n');
@@ -103,6 +113,59 @@ async function main() {
     console.log(`- Activated school year ${schoolYear.label}.`);
   } else {
     console.log(`- School year ${schoolYear.label} is already active.`);
+  }
+
+  const adminRole = await ensureAdminRole();
+  console.log(`- Admin role ready (${adminRole.permissions.length} permissions).`);
+
+  const adminUsername = 'admin';
+  const existingAdmin = await findUserByUsername(adminUsername);
+  if (existingAdmin) {
+    console.log(`- Admin user "${adminUsername}" already exists, skipping.`);
+  } else {
+    const temporaryPassword = randomBytes(9).toString('base64url');
+    const admin = await createUser(
+      {
+        username: adminUsername,
+        displayName: 'Admin',
+        password: temporaryPassword,
+        roleId: adminRole.id,
+      },
+      null,
+    );
+    console.log(`- Created admin user "${admin.username}".`);
+    console.log(`\n  TEMPORARY PASSWORD (shown once): ${temporaryPassword}\n`);
+    console.log('  You will be forced to change it on first login.');
+  }
+
+  // Dev/test-only fixture — see .env.example. The real admin's password
+  // is random and shown once, so the E2E suite needs its own account
+  // with a known, fixed password. mustChangePassword is flipped to false
+  // immediately: this user's purpose is testing *other* flows, not the
+  // forced-change flow (the real admin already covers that manually).
+  const e2ePassword = process.env.E2E_TEST_PASSWORD;
+  if (e2ePassword) {
+    const e2eUsername = 'e2e-test';
+    const existingE2EUser = await findUserByUsername(e2eUsername);
+    if (existingE2EUser) {
+      console.log(`- E2E test user "${e2eUsername}" already exists, skipping.`);
+    } else {
+      const e2eUser = await createUser(
+        {
+          username: e2eUsername,
+          displayName: 'E2E Test',
+          password: e2ePassword,
+          roleId: adminRole.id,
+        },
+        null,
+      );
+      await changeOwnPassword(e2eUser.id, { newPassword: e2ePassword });
+      console.log(
+        `- Created E2E test user "${e2eUser.username}" (password from env, not printed).`,
+      );
+    }
+  } else {
+    console.log('- E2E_TEST_PASSWORD not set, skipping E2E test user (its spec will skip itself).');
   }
 
   console.log('\nDone.');
