@@ -1,5 +1,15 @@
 # Phase 2.1 — Contract: School, SchoolYear, GradingPeriod
 
+> **⚠️ SUPERSEDED (2026-08-13).** This contract predates the adoption of the
+> multi-tenant "School Management Platform" playbook v2. It was implemented
+> and shipped as v1's Phase 2, but assumes a single tenant throughout —
+> `School` as a singleton, no `tenantId` anywhere, `GradingPeriod` expressing
+> quarters only. Under v2 this work is superseded by **v2 Phase 2 (Tenancy
+> foundation)** and **v2 Phase 3 (Config: `SchoolYear` + `Term`)**, both of
+> which need new contracts. Kept here as a record of the pre-pivot design,
+> not as a current spec — see the CLAUDE.md decision log entry "Adopted the
+> v2 platform pivot."
+
 **Status:** Draft, awaiting review. No implementation yet (per playbook Habit 3 —
 this is Prompt A; Prompt B implements it once approved).
 

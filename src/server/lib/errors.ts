@@ -45,3 +45,15 @@ export class ForbiddenError extends HttpError {
     super(403, 'FORBIDDEN', message);
   }
 }
+
+/**
+ * Thrown by TenantScopedRepository (src/server/tenancy/tenantScopedRepository.ts)
+ * when a method is called without a tenantId. 500, not 400 — this signals a
+ * route handler that failed to resolve a tenant before calling a service,
+ * not a client mistake. See docs/contracts/phase-2.1-tenancy-foundation.md §2.5.
+ */
+export class TenantRequiredError extends HttpError {
+  constructor() {
+    super(500, 'TENANT_REQUIRED', 'A repository method was called without a tenantId.');
+  }
+}

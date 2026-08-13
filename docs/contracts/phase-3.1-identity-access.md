@@ -1,5 +1,14 @@
 # Phase 3.1 — Contract: User, Role, Permission, Auth
 
+> **⚠️ SUPERSEDED (2026-08-13).** This contract predates the adoption of the
+> multi-tenant "School Management Platform" playbook v2. It was implemented
+> and shipped as v1's Phase 3, but gives `User` a single direct `roleId` and
+> assumes exactly one school — there is no `Membership` between user and
+> tenant. Under v2 this work is superseded by **v2 Phase 4 (Identity:
+> `User` + `Membership` + `Role`)**, which needs a new contract. Kept here as
+> a record of the pre-pivot design, not as a current spec — see the
+> CLAUDE.md decision log entry "Adopted the v2 platform pivot."
+
 **Status:** Draft, awaiting review. No implementation yet (Habit 3 — this is
 Prompt A; Prompt B implements it once approved).
 

@@ -1,31 +1,71 @@
-# IRMMHS School Management System
+# School Management Platform
 
 ## What this is
 
-A school management system for Iluminada Roxas-Mendoza Memorial High School
-(DepEd School ID 306715), Sulucan, Bocaue, Bulacan. ~500 JHS learners.
-Public high school. Built and maintained by one developer; must be
-operable by non-technical school staff after handover.
+A multi-school management platform. First and reference tenant (**"school
+zero"**): Iluminada Roxas-Mendoza Memorial High School (DepEd School ID
+306715), Sulucan, Bocaue, Bulacan — ~500 JHS learners, public high school,
+no IT staff. Built and maintained by one developer; must be operable by
+non-technical school staff after handover, and onboardable by a second
+school without a rewrite.
+
+**Pivoted from a single-school build to this multi-tenant platform on
+2026-08-13** — see the playbook v2 adoption entry in the decision log.
+`docs/contracts/phase-2.1-config-foundation.md` and
+`docs/contracts/phase-3.1-identity-access.md` document the pre-pivot,
+single-tenant shape of `School`/`SchoolYear`/`GradingPeriod` and
+`User`/`Role`; both are superseded and kept only as historical record.
+
+### The three reference schools
+
+Test every design choice against all three before hard-coding anything.
+Keep this table current — it's more useful day to day than any abstract
+genericity principle.
+
+|              | **School A — IRMMHS**           | **School B — private PH K-12**     | **School C — international**         |
+| ------------ | ------------------------------- | ---------------------------------- | ------------------------------------ |
+| Type         | PH public JHS                   | PH private K-12 with SHS           | Non-PH international                 |
+| Levels       | Grades 7–10                     | Kinder–12, SHS strands             | Years 1–13                           |
+| Terms        | 4 quarters                      | Quarters (JHS) + semesters (SHS)   | 3 trimesters                         |
+| Grading      | DepEd DO 8, transmutation table | DepEd DO 8 + a letter grade column | GPA on a 4.0 scale, no transmutation |
+| Learner ID   | LRN (12-digit)                  | LRN + internal student number      | No LRN at all                        |
+| Forms        | SF1, SF2, SF5, SF9, SF10        | Same, plus its own report card     | No DepEd forms                       |
+| Passing mark | 75                              | 75                                 | 50                                   |
+
+If a design choice breaks School C, it's hard-coded. Fix the seam or log
+the limit explicitly in the decision log — never by accident.
 
 ## Non-negotiables
 
-1. DepEd School Forms (SF1, SF2, SF5, SF9, SF10) must be producible and correct.
-2. Every academic record is scoped to a School Year. No exceptions.
-3. Finalized grades store a snapshot of the grading scheme that produced them.
-4. Grading weights, subjects, sections, roles, and terms are DATA, not code.
-5. Teachers encode grades on phones, on bad Wi-Fi. Design for that first.
-6. Personal data of minors. RA 10173 applies. Audit every write to a grade.
+1. **Tenancy: every query is tenant-scoped.** A repository method that can
+   run without a `tenantId` is a data breach involving minors. No exceptions.
+2. DepEd School Forms (SF1, SF2, SF5, SF9, SF10) must be producible and
+   correct — but they live in a DepEd compliance pack, not the core.
+3. Every academic record is scoped to a School Year. No exceptions.
+4. Finalized grades store a snapshot of the grading scheme that produced them.
+5. Grading weights, subjects, sections, roles, terms, and theme are DATA,
+   not code.
+6. Teachers encode grades on phones, on bad Wi-Fi. Design for that first.
+7. Personal data of minors, across multiple schools. RA 10173 applies.
+   Audit every write to a grade.
 
 ## Stack
 
 - Next.js (App Router) — one app, deployed on Vercel
 - Server logic lives in src/server/ (services + repositories). Route handlers
-  are thin: parse -> authorize -> call service -> serialize.
-- MongoDB Atlas + Mongoose
-- Tailwind CSS + shadcn/ui (shadcn not installed yet — lands in Phase 4)
+  are thin: parse -> resolve tenant -> authorize -> call service -> serialize.
+- MongoDB Atlas + Mongoose. Every collection compound-indexed on
+  `(tenantId, ...)`; every query goes through a `TenantScopedRepository` base
+  class that makes an unscoped query structurally impossible to write
+  (v2 Phase 2 — not built yet, see decision log).
+- Tailwind CSS + shadcn/ui, bound to CSS variables driven by a per-tenant
+  theme (shadcn not installed yet — lands in Phase 5)
 - next-auth **v4** (stable — not v5, still beta as of 2026-08-13), Credentials
   provider, JWT sessions, no DB adapter. bcryptjs for password hashing (pure
-  JS, no native build step). See decision log, Phase 3.
+  JS, no native build step). `User` is platform-level (not tenant-scoped); a
+  `Membership` joins user + tenant + role so one person can belong to more
+  than one school (v2 Phase 4 — supersedes the single-tenant `User`/`Role`
+  shape built in the old Phase 3, see decision log).
 - Zod at every API boundary — every route handler parses with a schema from `src/types/`
 - TypeScript (D2, confirmed 2026-08-13)
 - tsx — runs one-off TS scripts (`scripts/`) with `.env.local` loaded
@@ -40,23 +80,34 @@ operable by non-technical school staff after handover.
   ```
   src/
     app/                    Next.js App Router — pages, layouts, route handlers
-      api/                  route handlers: parse -> authorize -> call service -> serialize
+      api/                  route handlers: parse -> resolve tenant -> authorize -> call service -> serialize
       api/auth/[...nextauth] next-auth's own catch-all — framework-owned, not handleRoute()
       admin/                admin pages, real auth-gated since Phase 3 (proxy.ts + layout.tsx)
-      login/, change-password/  auth pages, deliberately unstyled until Phase 4
+                             — pre-pivot; becomes tenant-scoped (/s/{slug}/admin or equivalent)
+                             once v2 Phase 2 (tenancy) and Phase 4 (route protection) land
+      login/, change-password/  auth pages, deliberately unstyled until Phase 5
     server/
       db/                   connect.ts (cached Mongoose connection), schemaOptions.ts
+      tenancy/              TenantScopedRepository base class, tenant resolution helper
+                             (v2 Phase 2 — not built yet, see decision log)
       services/             business logic, one file per domain concept
       repositories/         data access + Mongoose schema, one file per model
       lib/                  server-only helpers (apiResponse, errors, routeHandler,
                              session — requirePermission()/getCurrentUser(), authOptions)
     types/                  shared TS types + Zod schemas (domain models, API contracts)
-    hooks/                  client hooks (useSchoolYear, ...)
+    hooks/                  client hooks (useSchoolYear, useTenant — the latter from v2 Phase 2)
     proxy.ts                optimistic route protection (Next 16 renamed Middleware -> Proxy)
   e2e/                      Playwright E2E specs (*.spec.ts) — separate from Vitest
   scripts/                  one-off TS scripts (seed.ts), run via `npm run seed` etc.
-  docs/contracts/           Habit-3 contract docs — schema/Zod/endpoints, reviewed before code
-  playbook/                 project playbook + design tokens (reference, not code)
+  docs/contracts/           Habit-3 contract docs — schema/Zod/endpoints, reviewed before code.
+                             phase-2.1-config-foundation.md and phase-3.1-identity-access.md
+                             predate the v2 platform pivot and are superseded — kept as record.
+  packs/                    versioned pack data (grading presets, term structure presets,
+                             compliance packs) — v2 Phase 10+, not built yet. Data, never code.
+  playbook/                 project playbook + design tokens (reference, not code). Current:
+                             School-Management-Platform-Playbook.md (v2) +
+                             irmmhs-design-tokens-v2.json. Superseded:
+                             IRMMHS-SMS-Project-Playbook.md (v1) + irmmhs-design-tokens.json.
   ```
 - Naming: kebab-case folders, camelCase filenames (`schoolYear.service.ts`), PascalCase
   for React components. One Mongoose model per file in `server/repositories/` (schema +
@@ -90,24 +141,36 @@ operable by non-technical school staff after handover.
 
 ## Design language
 
-Warm neutrals, school-color accent, rounded, generous spacing, humanist sans,
-real photography. NOT: purple/magenta gradients, dark-mode default, dense
-enterprise grids.
+Warm neutrals, one institutional colour (violet) doing the structural work,
+one vibrant accent (magenta/pink) spent only on the "Illumination" signature
+treatment. Rounded but never pill-shaped, generous spacing, humanist sans,
+real photography. NOT: purple/magenta _gradients_ or glassmorphism, dark-mode
+default, dense enterprise grids, a cute rounded edtech typeface.
 
-Full token spec lives in `playbook/irmmhs-design-tokens.json` (concept:
-"Lampara" / Illumination). **Its palette is marked UNVERIFIED** — built on a
-remembered violet+magenta school scheme, not sampled from the real logo.
-Do not consume it into tailwind.config until the logo is obtained and the
-palette is regenerated from real hex values (see the file's `$meta.swapPoint`).
-That work belongs to Phase 4, not before.
+Full token spec lives in `playbook/irmmhs-design-tokens-v2.json` (concept:
+"Lampara" / Illumination; v2 rebuilds the palette around the school's actual
+reported violet + vibrant pink scheme, replacing v1's placeholder blue/gold).
+**Its palette is still marked UNVERIFIED** — built on a remembered scheme,
+not sampled from the real logo. Do not consume it into tailwind.config until
+the logo is obtained and the palette is regenerated from real hex values
+(see the file's `$meta.swapPoint`). That work belongs to v2 Phase 5
+(Theming & design system), not before. Under the platform pivot, this file
+also becomes a _schema_ other schools instantiate — IRMMHS's palette is one
+theme instance, not the only one (v2 Phase 5, `D9`).
 
 ## Out of scope for v1
 
+- A second real school onboarded, and self-serve tenant signup (D8 —
+  platform-admin provisioning only; onboarding wizard is v2 Phase 16, "a
+  second school is possible" is Stage E, not v1)
 - ALS Senior High (schema must not make it impossible later — see D6)
 - SF6, SF7, SF4, SF8 (should-have / nice-to-have forms)
 - Parent portal, learning materials, assignments, analytics dashboards, SMS,
-  QR/biometric attendance (Phase 16+, nothing here until Stage C ships)
+  QR/biometric attendance (v2 Phase 19+, nothing here until Stage C ships)
 - Dark mode (deferred per design tokens, not an oversight)
+- Subdomain-based tenant resolution (D5 — path-based `/s/{slug}/…` for v1;
+  subdomains need wildcard DNS + per-tenant certs, a real cost not worth
+  paying yet)
 
 ## Decision log
 
@@ -308,6 +371,108 @@ now resolved by this phase.
 **Next up:** Phase 4 — Design system & app shell (Tailwind theme from the
 real palette once Phase 0 delivers the logo, shadcn/ui, the nav shell — the
 first phase where these bare admin pages stop looking like a 1998 intranet).
+
+### 2026-08-13 — Adopted the v2 platform pivot (multi-tenant)
+
+The developer brought a new playbook —
+`playbook/School-Management-Platform-Playbook.md` ("Version 2.0 —
+generalised") — and `irmmhs-design-tokens-v2.json`, replacing the v1
+single-school documents. v2 turns this from a system for one school into a
+**multi-tenant platform**, IRMMHS as school zero rather than the whole spec.
+The v1 files (`playbook/IRMMHS-SMS-Project-Playbook.md`,
+`playbook/irmmhs-design-tokens.json`) are superseded and kept only for
+history. Cost, from the playbook's own §0: 19 phases instead of 15, roughly
++35–40% build size, and the top failure mode moves from "wrong grade on a
+report card" to "wrong grade, **plus** one school seeing another school's
+learners" — a reportable RA 10173 breach once real data is involved.
+
+**Explicitly asked the developer whether to eat that cost now rather than
+assume it** — confirmed: adopt v2 now, rebuild the tenancy-unsafe parts of
+what's already built rather than defer.
+
+**Phase numbers shifted underneath completed work.** v1 Phase 1
+(repo/toolchain) ≈ v2 Phase 1, compatible as built except v2 adds a
+`src/server/tenancy/` folder from the start (not yet created). v1 Phase 2
+(Config: `School`/`SchoolYear`/`GradingPeriod`) and v1 Phase 3 (Identity:
+`User`/`Role`) do **not** carry forward as built — both assumed a single
+tenant, and v2 inserts a new **Phase 2 — Tenancy foundation** ahead of both,
+flagged ⚠️ as the highest-risk phase in the project. Under v2 numbering:
+
+- **v2 Phase 2 (Tenancy foundation) — not started.** `Tenant` model,
+  `TenantScopedRepository` base class, tenant resolution middleware,
+  isolation test suite, two-tenant seed. Nothing in the live Atlas DB has a
+  `tenantId` yet. Blocks Phase 3 and Phase 4 below.
+- **v2 Phase 3 (Config: `SchoolYear` + `Term`) — needs a rebuild, not an
+  extension.** The old `School`/`SchoolYear`/`GradingPeriod` models have no
+  `tenantId`; `School` was a singleton where v2 wants a platform-level
+  `Tenant` registry; `GradingPeriod` only expresses quarters where v2
+  generalises it into `Term` + `TermStructure` presets (quarters, semesters,
+  trimesters, custom).
+- **v2 Phase 4 (Identity: `User` + `Membership` + `Role`) — needs a rebuild,
+  not an extension.** The old `User` has a direct `roleId` and assumes
+  exactly one school; v2 makes `User` platform-level and inserts a
+  `Membership` (user × tenant × role) so one person can hold different
+  roles at different schools.
+- `docs/contracts/phase-2.1-config-foundation.md` and
+  `docs/contracts/phase-3.1-identity-access.md` are superseded by this —
+  kept as a record of the pre-pivot design, not as current contracts.
+
+**D1–D10 locked this session** (old D1–D6 are retired; v2's table
+renumbers and expands them):
+
+- **D1 (real deployment vs. portfolio): real, eventually.** Matches v2's own
+  assumption ("everything below assumes real, eventually"). RA 10173, an
+  MOA with IRMMHS, and a backup policy are real obligations to meet before
+  Phase 18 (Hardening & handover), not optional — and the multi-tenant shape
+  raises the stakes further: this project is now a Personal Information
+  Controller/Processor for potentially several schools' minors' data at
+  once, not just one school's.
+- **D2 (TypeScript) and D3 (one Next.js app, `src/server/` boundary) carry
+  forward unchanged** — v2's own recommendation matches what was already
+  locked in Phase 1. No rework needed on this front.
+- **D4 (tenancy model): shared database, shared schema, `tenantId`
+  discriminator, enforced by a base repository** — not database-per-tenant.
+  Database-per-tenant is safer by construction but multiplies migration and
+  backup work by school count, untenable solo. Adopted per playbook
+  recommendation, not separately re-litigated.
+- **D5 (tenant resolution): path-based `/s/{slug}/…` for v1.** Subdomains
+  need wildcard DNS and per-tenant certificates — real cost, no upfront
+  payoff with one tenant live. Resolution logic lives in exactly one file so
+  subdomains later are a swap, not a refactor.
+- **D6 (auth strategy): Credentials via next-auth, with a `Membership` join
+  between user and tenant.** Confirms and extends the already-built
+  next-auth v4 choice — the addition is `Membership`, not a provider change.
+- **D7 (PH-only vs. generic): generic core, pluggable compliance packs.**
+  DepEd forms, LRN validation, and LIS export move into a Philippine pack;
+  the core only knows about "a report," not SF9.
+- **D8 (who creates a school): platform-admin provisioning only, no
+  self-serve signup in v1.** A signup flow for a system holding minors'
+  records, with no identity verification, is a liability not worth taking
+  on day one.
+- **D9 (theme storage): data, from Phase 5.** Retrofitting theming after
+  screens are hard-coded with literal colour classes is one of the worst
+  refactors there is — build every component against CSS variables from the
+  first one, per the existing "no literal colour" rule this project already
+  intends to follow.
+- **D10 (v1 launch scope): IRMMHS, JHS only, DepEd pack, one theme.** ALS,
+  SHS, a second school, and self-serve onboarding are all v1.1+. Ship
+  something a real school uses this school year before generalising further
+  — the playbook's own closing caution, taken at face value.
+
+**Old D5/D6 status:** the pre-pivot D5 (auth mechanics) is subsumed by the
+new D6 above. The pre-pivot D6 (JHS-only vs. ALS-compatible schema shape) is
+still open, now tracked as v2's own D10 scope note plus the "three reference
+schools" generality test — revisit at v2 Phase 8 (Academic structure), same
+timing as before.
+
+**Not done in this session:** no code changed. This entry is the pivot
+record and the decision lock; the next session starts v2 Phase 2's Habit-3
+contract (Tenancy foundation) before touching the database or any existing
+model.
+
+**Next up:** v2 Phase 2 — Tenancy foundation. Contract first
+(`Tenant` schema + tenancy strategy document, §6.2.1 of the new playbook),
+reviewed before any implementation, per Habit 3.
 
 ---
 
