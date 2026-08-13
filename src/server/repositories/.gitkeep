@@ -1,0 +1,3 @@
+Data access lives here, one file per Mongoose model (e.g. schoolYear.repository.ts).
+Services call repositories; nothing outside src/server/ talks to Mongoose directly.
+Populated starting Phase 2.

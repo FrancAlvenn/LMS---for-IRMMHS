@@ -1,0 +1,9 @@
+node_modules
+.next
+coverage
+package-lock.json
+public
+
+# Source documents from the school/developer, not generated code —
+# don't reflow their formatting.
+playbook

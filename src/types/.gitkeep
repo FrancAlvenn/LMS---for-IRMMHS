@@ -1,0 +1,3 @@
+Shared TypeScript types (domain models, API contracts) that both client and
+server code import from. Populated starting Phase 2 alongside the first
+Zod-validated contract.

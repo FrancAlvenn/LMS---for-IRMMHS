@@ -1,0 +1,2 @@
+Business logic lives here, one file per domain concept (e.g. schoolYear.service.ts).
+Services are the only thing route handlers call into. Populated starting Phase 2.

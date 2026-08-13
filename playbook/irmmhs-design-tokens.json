@@ -1,0 +1,674 @@
+{
+  "$schema": "https://irmmhs-sms.local/design-tokens.schema.json",
+  "$meta": {
+    "name": "IRMMHS Design System",
+    "concept": "Lampara",
+    "version": "0.2.0-draft",
+    "status": "UNVERIFIED PALETTE — built on a remembered school colour scheme. See $meta.swapPoint.",
+    "changelog": {
+      "0.2.0": "Palette rebuilt around the school's violet + vibrant pink scheme (reported by the developer, not yet verified against the logo). Neutral base retinted from warm-green to faint mauve. Danger ramp moved from brick to rust to open hue separation from the pink. Warning promoted to its own amber ramp since gold is no longer the accent. Signature 'Illumination' recoloured from gold to pink — and strengthened, see conceptRationale.",
+      "0.1.0": "Initial draft with a placeholder blue/gold palette."
+    },
+    "conceptRationale": "Iluminada means 'illuminated'. The school is named for a teacher, and it sits in Bocaue — the fireworks capital of the Philippines. Light is the school's own word for itself, so it is the organising idea here rather than an invented theme. The violet-and-magenta scheme makes this literal: those are the colours of a Bocaue night sky during the Pagoda season. Violet does the institutional work — navigation, headers, buttons, print mastheads. Vibrant pink is held back and spent in exactly one place: the Illumination signature, which marks whatever is live right now. Everything else stays quiet.",
+    "swapPoint": {
+      "$description": "The palette below is built on a recollection of the school's colours, not on the artefact. 'I believe the school uses X' is a hypothesis. Confirm it before Phase 4.",
+      "action": "Obtain the official IRMMHS logo at the highest resolution available and sample the actual hex values. Regenerate color.palette.primary and color.palette.accent as full 50-950 ramps from those samples.",
+      "doNotChange": "paper, success, warning, danger, and everything in color.semantic and color.domain are structural. They are tuned to sit beside a violet/magenta pair and should survive a correction to the exact hues untouched.",
+      "ifWrong": "If the scheme turns out to be something else entirely, two ramps change and nothing else does. That is the whole point of the semantic layer."
+    },
+    "consumption": [
+      "Source of truth for the Tailwind theme in tailwind.config and the CSS custom properties in globals.css.",
+      "Generate, don't hand-copy. Feed this file to a prompt that emits both files so they never drift.",
+      "Convertible to W3C DTCG format ($value/$type) if Tokens Studio or Style Dictionary is adopted later."
+    ],
+    "saturationDiscipline": {
+      "$description": "The single most important rule in this file. A vibrant magenta identity is correct for the school and wrong for a screen a teacher stares at for three hours encoding grades. Resolve that tension by zoning, not by desaturating the brand.",
+      "fullVibrancy": [
+        "Login and landing screens",
+        "The app masthead and school name",
+        "Active navigation indicator",
+        "The Illumination signature",
+        "Report card mastheads and printed form headers",
+        "Empty states and celebratory moments"
+      ],
+      "restrained": [
+        "Class record and grade-entry grids",
+        "Learner and personnel tables",
+        "Attendance grids",
+        "Any screen holding more than roughly twenty rows"
+      ],
+      "rule": "In restrained zones, surfaces stay near-white and the brand appears only as a hairline, a small indicator, or text. No large saturated fills behind data."
+    },
+    "antiBrief": {
+      "$description": "Directions explicitly rejected. Note the correction in 0.2.0: an earlier draft rejected violet outright as a generic AI-design default. That rejection was aimed at invented purple gradient themes, not at a school's real identity. The school's actual colours win — but the *gradient mesh* rejection stands. Flat, confident violet is not the same thing as a purple gradient.",
+      "rejected": [
+        "Purple or magenta GRADIENTS, gradient meshes, glassmorphism. The brand colours appear as flat fills, hairlines and text — never as a blend.",
+        "Cream background + high-contrast serif display + terracotta accent — the current generic AI-design default.",
+        "Dark mode as the default theme.",
+        "Dense enterprise data grids with hairline borders and zero radius.",
+        "Stock 3D illustrations, isometric characters, abstract corporate blobs.",
+        "A cute rounded 'edtech' typeface. The warmth comes from colour, spacing, photography and copy — not from a soft font that undermines a legal document.",
+        "Saturated magenta as a large background fill anywhere a teacher works for extended periods. See saturationDiscipline."
+      ]
+    }
+  },
+
+  "color": {
+    "palette": {
+      "paper": {
+        "$description": "Base neutral, retinted in 0.2.0. Carries a barely-perceptible mauve cast so it sits under violet and magenta without the muddy clash a green-cast or beige neutral would produce. Still reads as paper, not as cream and not as cold gray. Carries every surface and all body text.",
+        "50": "#FAF8FA",
+        "100": "#F4F1F4",
+        "200": "#E8E3E8",
+        "300": "#D5CED5",
+        "400": "#AFA6AF",
+        "500": "#8A818A",
+        "600": "#6D656C",
+        "700": "#554E54",
+        "800": "#3E393E",
+        "900": "#2B272B",
+        "950": "#1A171A"
+      },
+      "primary": {
+        "$description": "School violet. Does all the institutional work: navigation, buttons, headers, links, print mastheads. Chosen deep enough at 700-900 to hold white text at accessible contrast, which vibrant pink cannot do. VERIFY against the real logo.",
+        "50": "#F6F1FB",
+        "100": "#EDE1F8",
+        "200": "#DCC5F2",
+        "300": "#C39FE8",
+        "400": "#A671DA",
+        "500": "#8B4CC7",
+        "600": "#7435AC",
+        "700": "#5F2B8D",
+        "800": "#4F2674",
+        "900": "#422260",
+        "950": "#29113F"
+      },
+      "accent": {
+        "$description": "School pink — vibrant magenta. This is the signature colour and the loudest thing in the system. Reserved for the Illumination treatment, the active school year, the open quarter, today, and identity surfaces. Never a large background fill behind data. VERIFY against the real logo.",
+        "50": "#FEF0F7",
+        "100": "#FDDFEE",
+        "200": "#FCBFDE",
+        "300": "#FA92C6",
+        "400": "#F55DA7",
+        "500": "#E93288",
+        "600": "#D01A6D",
+        "700": "#AE1259",
+        "800": "#90124C",
+        "900": "#781243",
+        "950": "#470423"
+      },
+      "success": {
+        "$description": "Pushed slightly toward emerald in 0.2.0 so it reads clean rather than muddy beside magenta. Also carries Outstanding grades and Present attendance.",
+        "50": "#EFF9F2",
+        "100": "#D8F0DF",
+        "200": "#B2E1C1",
+        "300": "#7FCA9A",
+        "400": "#4BAC71",
+        "500": "#2A8F55",
+        "600": "#1D7245",
+        "700": "#185B39",
+        "800": "#164930",
+        "900": "#133D29",
+        "950": "#062214"
+      },
+      "warning": {
+        "$description": "Promoted to its own ramp in 0.2.0. It previously aliased the gold accent; now that the accent is pink, warning needs independent amber or it would collide with the signature.",
+        "50": "#FEF7E9",
+        "100": "#FCEBC2",
+        "200": "#F9D785",
+        "300": "#F5BE45",
+        "400": "#F0A518",
+        "500": "#DA850C",
+        "600": "#B4600A",
+        "700": "#90430D",
+        "800": "#773511",
+        "900": "#652C11",
+        "950": "#3A1505"
+      },
+      "danger": {
+        "$description": "Moved from brick to rust in 0.2.0 — deliberately orange-biased to open maximum hue separation from the magenta accent. A pinkish-red error state sitting next to a magenta brand colour is genuinely ambiguous, and the place that ambiguity would land is a failing grade on a report card. Still muted rather than alarm-bright: this colour appears beside a fourteen-year-old's name and must read as serious, not as a system crash.",
+        "50": "#FDF4F0",
+        "100": "#FBE5DB",
+        "200": "#F6CDBB",
+        "300": "#EFAA8E",
+        "400": "#E37B57",
+        "500": "#D25733",
+        "600": "#B84226",
+        "700": "#98341F",
+        "800": "#7C2E1E",
+        "900": "#67291D",
+        "950": "#38110A"
+      },
+      "$aliases": {
+        "info": "primary",
+        "$note": "Six hues total: paper, primary violet, accent pink, success green, warning amber, danger rust. One more than the previous draft, because the pink accent forced warning out on its own. Do not add a seventh — a tight palette is easier for a non-designer to maintain after handover."
+      }
+    },
+
+    "semantic": {
+      "$description": "Always build screens from these, never from the raw palette. Correcting the school colours then costs two edits.",
+      "surface": {
+        "canvas": "{paper.100}",
+        "raised": "#FFFFFF",
+        "sunken": "{paper.200}",
+        "inverse": "{paper.900}",
+        "brand": "{primary.700}",
+        "brandSubtle": "{primary.50}",
+        "accentSubtle": "{accent.50}",
+        "overlay": "rgba(26, 23, 26, 0.55)"
+      },
+      "content": {
+        "primary": "{paper.900}",
+        "secondary": "{paper.700}",
+        "muted": "{paper.500}",
+        "onBrand": "#FFFFFF",
+        "onAccent": "#FFFFFF",
+        "onAccentSubtle": "{accent.800}",
+        "onInverse": "{paper.100}",
+        "link": "{primary.700}",
+        "linkHover": "{primary.800}",
+        "$note": "onAccent is white and requires accent.600 or darker beneath it. White on accent.500 or lighter fails contrast — this is the most likely accessibility mistake in the whole system."
+      },
+      "border": {
+        "subtle": "{paper.200}",
+        "default": "{paper.300}",
+        "strong": "{paper.400}",
+        "brand": "{primary.600}",
+        "focus": "{accent.500}"
+      },
+      "interactive": {
+        "primaryRest": "{primary.700}",
+        "primaryHover": "{primary.800}",
+        "primaryActive": "{primary.900}",
+        "primaryDisabled": "{paper.300}",
+        "secondaryRest": "#FFFFFF",
+        "secondaryHover": "{paper.100}",
+        "ghostHover": "{paper.200}",
+        "destructiveRest": "{danger.600}",
+        "destructiveHover": "{danger.700}",
+        "selectedBg": "{accent.50}",
+        "selectedBorder": "{accent.300}"
+      },
+      "feedback": {
+        "successBg": "{success.50}",
+        "successBorder": "{success.200}",
+        "successContent": "{success.700}",
+        "warningBg": "{warning.50}",
+        "warningBorder": "{warning.200}",
+        "warningContent": "{warning.700}",
+        "dangerBg": "{danger.50}",
+        "dangerBorder": "{danger.200}",
+        "dangerContent": "{danger.700}",
+        "infoBg": "{primary.50}",
+        "infoBorder": "{primary.200}",
+        "infoContent": "{primary.700}"
+      }
+    },
+
+    "domain": {
+      "$description": "School-specific semantic colour. This group is what makes the system belong to this project rather than to any dashboard. Every status badge in the app resolves through here.",
+
+      "gradeDescriptor": {
+        "$description": "DepEd Order No. 8, s. 2015 descriptors. The progression runs green to violet to neutral to amber to rust — a gradient of concern, not a traffic light. Satisfactory sits at neutral because it is the baseline expectation, not a warning. Note the accent pink is deliberately ABSENT from this scale: the school's signature colour must never mean a grade, or every report card would look like it was flagging something. VERIFY the bands against the current DepEd order before shipping; the ranges below are the DO 8 s. 2015 baseline and MATATAG may have superseded them.",
+        "outstanding": {
+          "range": "90-100",
+          "code": "O",
+          "label": "Outstanding",
+          "bg": "{success.50}",
+          "border": "{success.200}",
+          "content": "{success.700}",
+          "dot": "{success.500}"
+        },
+        "verySatisfactory": {
+          "range": "85-89",
+          "code": "VS",
+          "label": "Very Satisfactory",
+          "bg": "{primary.50}",
+          "border": "{primary.200}",
+          "content": "{primary.700}",
+          "dot": "{primary.500}"
+        },
+        "satisfactory": {
+          "range": "80-84",
+          "code": "S",
+          "label": "Satisfactory",
+          "bg": "{paper.100}",
+          "border": "{paper.300}",
+          "content": "{paper.700}",
+          "dot": "{paper.500}"
+        },
+        "fairlySatisfactory": {
+          "range": "75-79",
+          "code": "FS",
+          "label": "Fairly Satisfactory",
+          "bg": "{warning.50}",
+          "border": "{warning.200}",
+          "content": "{warning.700}",
+          "dot": "{warning.500}"
+        },
+        "didNotMeetExpectations": {
+          "range": "below 75",
+          "code": "DNME",
+          "label": "Did Not Meet Expectations",
+          "bg": "{danger.50}",
+          "border": "{danger.200}",
+          "content": "{danger.700}",
+          "dot": "{danger.500}"
+        },
+        "notYetGraded": {
+          "range": null,
+          "code": "—",
+          "label": "Not yet graded",
+          "bg": "transparent",
+          "border": "{paper.200}",
+          "content": "{paper.400}",
+          "dot": "{paper.300}"
+        }
+      },
+
+      "attendance": {
+        "present": { "bg": "{success.50}", "content": "{success.700}", "dot": "{success.500}", "glyph": "P" },
+        "absent": { "bg": "{danger.50}", "content": "{danger.700}", "dot": "{danger.500}", "glyph": "A" },
+        "late": { "bg": "{warning.50}", "content": "{warning.700}", "dot": "{warning.500}", "glyph": "L" },
+        "excused": { "bg": "{primary.50}", "content": "{primary.700}", "dot": "{primary.500}", "glyph": "E" },
+        "noClass": { "bg": "{paper.100}", "content": "{paper.400}", "dot": "{paper.300}", "glyph": "·" }
+      },
+
+      "enrollmentStatus": {
+        "enrolled": { "content": "{success.700}", "bg": "{success.50}" },
+        "pending": { "content": "{warning.700}", "bg": "{warning.50}" },
+        "transferredIn": { "content": "{primary.700}", "bg": "{primary.50}" },
+        "transferredOut": { "content": "{paper.600}", "bg": "{paper.100}" },
+        "dropped": { "content": "{danger.700}", "bg": "{danger.50}" },
+        "graduated": { "content": "{primary.800}", "bg": "{primary.100}" },
+        "archived": { "content": "{paper.500}", "bg": "{paper.100}" }
+      },
+
+      "gradingPeriodState": {
+        "$description": "Drives the quarter selector and the teacher's encoding screen. 'open' is the only state that gets the Illumination treatment, and the only place the accent pink appears in this group.",
+        "notStarted": { "content": "{paper.500}", "bg": "{paper.100}", "border": "{paper.200}" },
+        "open": { "content": "{accent.800}", "bg": "{accent.50}", "border": "{accent.300}", "illuminated": true },
+        "submitted": { "content": "{primary.700}", "bg": "{primary.50}", "border": "{primary.200}" },
+        "approved": { "content": "{success.700}", "bg": "{success.50}", "border": "{success.200}" },
+        "locked": { "content": "{paper.600}", "bg": "{paper.200}", "border": "{paper.300}" }
+      },
+
+      "gradeComponent": {
+        "$description": "The three DepEd assessment components. Used for column headers and the weight-distribution bar in the grading-scheme editor. This is the one data context where the accent pink is allowed, because the bar is small, decorative-adjacent, and needs three clearly distinct swatches.",
+        "writtenWork": { "abbr": "WW", "label": "Written Work", "swatch": "{primary.500}" },
+        "performanceTask": { "abbr": "PT", "label": "Performance Task", "swatch": "{accent.400}" },
+        "quarterlyAssessment": { "abbr": "QA", "label": "Quarterly Assessment", "swatch": "{success.400}" }
+      },
+
+      "announcementCategory": {
+        "general": "{paper.500}",
+        "academic": "{primary.500}",
+        "event": "{accent.500}",
+        "urgent": "{danger.500}",
+        "holiday": "{success.500}"
+      },
+
+      "syncStatus": {
+        "$description": "Teachers encode on phones over unreliable school Wi-Fi. Sync state must be visible at all times on the grade-entry screen, never hidden in a toast.",
+        "savedLocal": { "content": "{paper.600}", "label": "Naka-save sa device" },
+        "syncing": { "content": "{primary.600}", "label": "Sinisync…" },
+        "synced": { "content": "{success.600}", "label": "Naka-save na" },
+        "failed": { "content": "{danger.600}", "label": "Hindi na-save — subukan ulit" }
+      }
+    }
+  },
+
+  "typography": {
+    "fontFamily": {
+      "display": {
+        "stack": "'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif",
+        "$description": "Headings, the school name, report-card mastheads, empty-state titles. Slightly condensed and characterful at large sizes — echoes school signage and the all-caps labelling of DepEd forms. Its sturdiness is doing more work now that the palette is loud: a softer display face beside vibrant magenta would tip the whole thing into greeting card. Used with restraint: never below 20px, never for body copy.",
+        "source": "Google Fonts (variable, opsz + wdth axes)"
+      },
+      "sans": {
+        "stack": "'Figtree Variable', 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "$description": "Every piece of UI and body text. Warm humanist sans with open apertures — holds up at 13px on a cheap Android screen, which is where most grade encoding will happen.",
+        "source": "Google Fonts (variable)"
+      },
+      "mono": {
+        "stack": "'IBM Plex Mono', ui-monospace, 'SF Mono', monospace",
+        "$description": "LRNs, School ID, form numbers, section codes. Anything that is an identifier rather than a word.",
+        "source": "Google Fonts"
+      },
+      "print": {
+        "stack": "Arial, Helvetica, sans-serif",
+        "$description": "School Forms only. Do NOT use the web fonts on printed output — DepEd forms are checked against a known layout and metric-safe system fonts preserve fidelity across whatever printer the school has."
+      }
+    },
+
+    "fontFeature": {
+      "tabularNumbers": "'tnum' 1, 'lnum' 1",
+      "$description": "MANDATORY on every grade table, score input, average, and attendance count. Proportional figures make a column of grades unreadable. Apply via a .numeric utility class."
+    },
+
+    "scale": {
+      "$description": "Modest scale — this is a dense administrative product, not a marketing site. Only display-lg and up use the display face.",
+      "display-xl": { "size": "2.5rem", "lineHeight": "1.1", "weight": 700, "tracking": "-0.02em", "family": "display" },
+      "display-lg": { "size": "2rem", "lineHeight": "1.15", "weight": 700, "tracking": "-0.015em", "family": "display" },
+      "display-md": { "size": "1.5rem", "lineHeight": "1.25", "weight": 600, "tracking": "-0.01em", "family": "display" },
+      "heading-lg": { "size": "1.25rem", "lineHeight": "1.35", "weight": 600, "tracking": "-0.005em", "family": "sans" },
+      "heading-md": { "size": "1.0625rem", "lineHeight": "1.4", "weight": 600, "tracking": "0", "family": "sans" },
+      "heading-sm": { "size": "0.9375rem", "lineHeight": "1.4", "weight": 600, "tracking": "0", "family": "sans" },
+      "body-lg": { "size": "1rem", "lineHeight": "1.6", "weight": 400, "tracking": "0", "family": "sans" },
+      "body-md": { "size": "0.9375rem", "lineHeight": "1.55", "weight": 400, "tracking": "0", "family": "sans" },
+      "body-sm": { "size": "0.875rem", "lineHeight": "1.5", "weight": 400, "tracking": "0", "family": "sans" },
+      "caption": { "size": "0.8125rem", "lineHeight": "1.45", "weight": 400, "tracking": "0.005em", "family": "sans" },
+      "overline": { "size": "0.6875rem", "lineHeight": "1.3", "weight": 600, "tracking": "0.08em", "transform": "uppercase", "family": "sans" },
+      "data": { "size": "0.875rem", "lineHeight": "1.4", "weight": 500, "tracking": "0.01em", "family": "mono" }
+    },
+
+    "usageRules": [
+      "Sentence case everywhere except the overline style and printed form labels.",
+      "The overline style is the nod to DepEd form vernacular — use it for field labels and table group headers, nowhere else.",
+      "Never set body text in the display face.",
+      "Minimum body size on mobile is 15px. Teachers reading this are often over forty and on a phone in a classroom.",
+      "Never set body text in the accent pink. It is a surface and indicator colour, not a text colour, except at accent.800 on accent.50."
+    ]
+  },
+
+  "space": {
+    "$description": "4px base. Generous rather than tight. Spacing carries even more weight now that the palette is vibrant — the breathing room is what keeps a loud colour scheme from feeling shouty.",
+    "0": "0",
+    "1": "0.25rem",
+    "2": "0.5rem",
+    "3": "0.75rem",
+    "4": "1rem",
+    "5": "1.25rem",
+    "6": "1.5rem",
+    "8": "2rem",
+    "10": "2.5rem",
+    "12": "3rem",
+    "16": "4rem",
+    "20": "5rem",
+    "24": "6rem",
+    "sectionGap": "{space.10}",
+    "cardPadding": "{space.5}",
+    "cardPaddingMobile": "{space.4}",
+    "pageGutter": "{space.4}",
+    "pageGutterDesktop": "{space.8}"
+  },
+
+  "radius": {
+    "$description": "Generously rounded but never pill-shaped. Pills read as consumer app; squared corners read as government form. The middle is where 'friendly public school' lives.",
+    "none": "0",
+    "xs": "0.25rem",
+    "sm": "0.375rem",
+    "md": "0.625rem",
+    "lg": "0.875rem",
+    "xl": "1.125rem",
+    "2xl": "1.5rem",
+    "full": "9999px",
+    "usage": {
+      "button": "{radius.md}",
+      "input": "{radius.md}",
+      "card": "{radius.lg}",
+      "modal": "{radius.xl}",
+      "badge": "{radius.sm}",
+      "avatar": "{radius.full}",
+      "$note": "radius.full is permitted on avatars and dot indicators only."
+    }
+  },
+
+  "shadow": {
+    "$description": "Shadow colour is derived from paper.900, not pure black. Warm shadows on a warm surface; a black shadow on this palette reads dirty.",
+    "xs": "0 1px 2px 0 rgba(43, 39, 43, 0.05)",
+    "sm": "0 1px 3px 0 rgba(43, 39, 43, 0.07), 0 1px 2px -1px rgba(43, 39, 43, 0.05)",
+    "md": "0 4px 8px -2px rgba(43, 39, 43, 0.08), 0 2px 4px -2px rgba(43, 39, 43, 0.05)",
+    "lg": "0 12px 20px -6px rgba(43, 39, 43, 0.10), 0 4px 8px -4px rgba(43, 39, 43, 0.06)",
+    "xl": "0 24px 40px -12px rgba(43, 39, 43, 0.14)",
+    "focus": "0 0 0 3px rgba(233, 50, 136, 0.30)",
+    "illumination": "0 0 0 1px rgba(250, 146, 198, 0.75), 0 2px 14px -2px rgba(233, 50, 136, 0.28)"
+  },
+
+  "signature": {
+    "$description": "The one memorable element. Spend the boldness here and keep everything else quiet.",
+    "name": "Illumination",
+    "concept": "The school's name means 'illuminated'. Whatever is live right now — the active school year, the open quarter, today's date column, the currently selected learner, the class you are encoding — is not filled with colour. It is lit: a magenta hairline ring plus a soft outward glow, on an otherwise near-white surface. Nothing else in the interface glows. Recolouring this from gold to the school's pink strengthens it: Bocaue is the fireworks capital of the Philippines, so a magenta glow against a near-dark field is the town's own visual signature, not a borrowed one.",
+    "implementation": {
+      "boxShadow": "{shadow.illumination}",
+      "background": "{accent.50}",
+      "borderColor": "{accent.300}",
+      "textColor": "{accent.800}"
+    },
+    "appliesTo": [
+      "Active school year chip in the top bar",
+      "Open grading period in the quarter selector",
+      "Today's column in the attendance grid",
+      "The row currently being encoded in the class record",
+      "The learner card matching the active search"
+    ],
+    "neverAppliesTo": [
+      "Primary buttons",
+      "Navigation items",
+      "Any success, warning, or error state",
+      "Any grade descriptor badge",
+      "More than one element on screen at a time"
+    ],
+    "reducedMotion": "The glow is static. There is no pulse or animation, so nothing needs to be disabled under prefers-reduced-motion.",
+    "discipline": "With a vibrant accent, the one-element-at-a-time rule stops being a stylistic preference and becomes structural. Two magenta glows on one screen and the signature means nothing."
+  },
+
+  "motion": {
+    "$description": "Restrained. Animation on a slow phone over school Wi-Fi reads as lag, not polish.",
+    "duration": { "instant": "80ms", "fast": "140ms", "base": "200ms", "slow": "320ms" },
+    "easing": {
+      "standard": "cubic-bezier(0.2, 0, 0.1, 1)",
+      "enter": "cubic-bezier(0, 0, 0.2, 1)",
+      "exit": "cubic-bezier(0.4, 0, 1, 1)"
+    },
+    "rules": [
+      "Animate opacity and transform only. Never height, width, or box-shadow on a list.",
+      "No scroll-triggered reveals anywhere in the app shell.",
+      "Respect prefers-reduced-motion by reducing all durations to 0ms."
+    ]
+  },
+
+  "layout": {
+    "breakpoint": {
+      "sm": "480px",
+      "md": "768px",
+      "lg": "1024px",
+      "xl": "1280px",
+      "$note": "Design at 360px first. That is the real device."
+    },
+    "container": { "form": "42rem", "content": "64rem", "wide": "80rem", "full": "100%" },
+    "sidebarWidth": "16rem",
+    "sidebarCollapsedWidth": "4rem",
+    "topBarHeight": "3.5rem",
+    "mobileNavHeight": "4rem",
+    "zIndex": {
+      "base": 0,
+      "sticky": 100,
+      "dropdown": 200,
+      "overlay": 300,
+      "modal": 400,
+      "toast": 500,
+      "tooltip": 600
+    }
+  },
+
+  "component": {
+    "$description": "Component-level tokens that shadcn/ui variants map onto.",
+    "button": {
+      "heightSm": "2rem",
+      "heightMd": "2.5rem",
+      "heightLg": "2.75rem",
+      "paddingX": "{space.4}",
+      "radius": "{radius.md}",
+      "fontWeight": 600,
+      "fontSize": "{typography.scale.body-sm.size}",
+      "$note": "Primary buttons are violet, not pink. Pink buttons would compete with the Illumination signature everywhere on the screen. There is no pink button variant in this system."
+    },
+    "input": {
+      "height": "2.75rem",
+      "heightMobile": "3rem",
+      "paddingX": "{space.3}",
+      "radius": "{radius.md}",
+      "borderColor": "{border.default}",
+      "borderColorFocus": "{border.focus}",
+      "bg": "#FFFFFF",
+      "$note": "Inputs are taller than a typical web app. Fat fingers, phones, hundreds of entries per sitting."
+    },
+    "card": {
+      "bg": "{surface.raised}",
+      "border": "1px solid {border.subtle}",
+      "radius": "{radius.lg}",
+      "padding": "{space.5}",
+      "shadow": "{shadow.sm}"
+    },
+    "table": {
+      "rowHeight": "3rem",
+      "rowHeightCompact": "2.5rem",
+      "headerBg": "{paper.100}",
+      "headerContent": "{paper.600}",
+      "borderColor": "{border.subtle}",
+      "stripeBg": "{paper.50}",
+      "hoverBg": "{primary.50}",
+      "stickyHeaderShadow": "{shadow.sm}",
+      "$note": "Row hover uses the violet tint, not the pink. Pink on hover would fire the signature colour hundreds of times per scroll."
+    },
+    "gradeCell": {
+      "$description": "The single most-used control in the entire system. Optimise it above everything else.",
+      "minHeight": "3rem",
+      "minWidth": "3.5rem",
+      "fontFamily": "{fontFamily.mono}",
+      "fontFeature": "{fontFeature.tabularNumbers}",
+      "textAlign": "center",
+      "radius": "{radius.sm}",
+      "bgRest": "#FFFFFF",
+      "bgFocus": "{accent.50}",
+      "bgInvalid": "{danger.50}",
+      "bgDirty": "{primary.50}",
+      "borderDirty": "{primary.300}",
+      "$note": "The focused cell is the one legitimate Illumination site inside a data grid — it is the single live thing on the screen. bgDirty marks an unsaved local edit and stays violet. It must be visually obvious which cells have not reached the server yet."
+    },
+    "badge": {
+      "height": "1.5rem",
+      "paddingX": "{space.2}",
+      "radius": "{radius.sm}",
+      "fontSize": "{typography.scale.caption.size}",
+      "fontWeight": 600
+    },
+    "navItem": {
+      "height": "2.5rem",
+      "radius": "{radius.md}",
+      "restContent": "{paper.700}",
+      "hoverBg": "{paper.200}",
+      "activeBg": "{primary.50}",
+      "activeContent": "{primary.800}",
+      "activeIndicator": "{accent.500}",
+      "$note": "The active nav item is violet-tinted with a pink indicator bar — the smallest possible dose of the signature colour, marking where you are."
+    }
+  },
+
+  "print": {
+    "$description": "School Forms are the system's most important output. They are printed, signed, stamped, and filed. Screen tokens do not apply here.",
+    "pageSize": {
+      "default": "long",
+      "long": { "width": "8.5in", "height": "13in", "$note": "Long bond / Folio — the default paper in Philippine public schools. CONFIRM with the registrar which size their forms actually use." },
+      "a4": { "width": "210mm", "height": "297mm" },
+      "letter": { "width": "8.5in", "height": "11in" }
+    },
+    "margin": { "top": "0.5in", "right": "0.4in", "bottom": "0.5in", "left": "0.4in" },
+    "fontFamily": "{fontFamily.print.stack}",
+    "fontSize": { "body": "9pt", "small": "7.5pt", "heading": "11pt", "masthead": "13pt" },
+    "color": {
+      "text": "#000000",
+      "rule": "#000000",
+      "ruleSubtle": "#666666",
+      "$note": "Grayscale only. CRITICAL with this palette: violet and magenta collapse to nearly the same mid-gray on a mono laser printer. Any meaning carried by brand colour on screen MUST also be carried by a code, glyph, or position on the printed form. See accessibility.colorIndependence."
+    },
+    "ruleWidth": { "hairline": "0.5pt", "default": "0.75pt", "heavy": "1.25pt" },
+    "rules": [
+      "Set a print stylesheet that strips every shadow, radius, and background fill.",
+      "Signature blocks are a solid rule with the printed name and title beneath. Never a rounded box.",
+      "The form number (SF9, SF10) sits in a fixed corner position matching the official template.",
+      "Grade columns use tabular figures and right-align. Never centre a decimal.",
+      "Obtain a monochrome version of the school logo. The colour logo will not reproduce legibly on the school's printer."
+    ]
+  },
+
+  "imagery": {
+    "photography": {
+      "$description": "Real photographs of IRMMHS — its buildings, its students, its events. Sourced from the school's own Facebook pages with permission.",
+      "treatment": "Natural colour, no filters, no duotone overlays. Slight warm grade at most. Resist the urge to magenta-tint photos to match the brand — it dates fast and it makes real students look artificial.",
+      "radius": "{radius.lg}",
+      "aspectRatios": { "hero": "16/9", "card": "4/3", "avatar": "1/1" },
+      "placement": ["Login page background", "Announcement cards", "The school profile page", "Empty states"],
+      "consent": "Learner photographs require parental consent under RA 10173. Do not publish student faces without documented consent on file."
+    },
+    "illustration": {
+      "policy": "None. No stock illustration of any kind.",
+      "emptyStates": "Use a large outlined icon in paper.300 plus warm copy. That is enough."
+    },
+    "iconography": {
+      "library": "lucide-react",
+      "strokeWidth": 1.75,
+      "sizes": { "sm": "16px", "md": "20px", "lg": "24px", "xl": "32px" },
+      "$note": "Consistent stroke width matters more than icon choice. 1.75 is slightly softer than the 2 default — a small deliberate warmth."
+    },
+    "logo": {
+      "status": "MISSING — obtain from the school in Phase 0. This is now blocking, not optional: the entire palette is a guess until the logo is sampled.",
+      "required": ["SVG or highest-resolution PNG", "Monochrome version for printed forms", "Favicon derivation", "Sampled hex values for primary and accent"]
+    }
+  },
+
+  "voice": {
+    "$description": "Copy is design material. It carries as much of the 'homey' feeling as the colour does.",
+    "principles": [
+      "Sentence case. Plain verbs. No filler.",
+      "Name things the way school staff name them: 'class record', 'adviser', 'section', 'quarter' — not 'gradebook', 'instructor', 'class group', 'term'.",
+      "English as the base, Filipino where it is genuinely how people there speak. Do not translate for the sake of it — half-translated interfaces are harder to use than either language alone.",
+      "An action keeps its name through the whole flow: the button that says 'Submit grades' produces a toast that says 'Grades submitted'.",
+      "Errors say what happened and what to do. They do not apologise and they are never vague.",
+      "Empty screens are an invitation to act, not a shrug.",
+      "Keep the copy plain. A loud palette and playful copy together tip into novelty; the words should stay steady so the colour can be the personality."
+    ],
+    "samples": {
+      "emptyLearners": { "title": "Wala pang naka-enroll", "body": "Add learners one at a time, or import your class list from Excel.", "action": "Import from Excel" },
+      "emptyAnnouncements": { "title": "Tahimik pa rito", "body": "Announcements you post will show up here for the sections you choose.", "action": "Write an announcement" },
+      "gradesSubmitted": "Grades submitted for review.",
+      "gradesLocked": "This quarter is closed. Ask the registrar to reopen it if you need to make a change.",
+      "saveFailed": "Couldn't save — you're offline. Your work is kept on this device and will sync when you reconnect.",
+      "confirmSubmit": { "title": "Submit grades for Grade 8 — Sampaguita?", "body": "The adviser and registrar will be able to review these. You can still edit until they're approved.", "confirm": "Submit grades", "cancel": "Keep editing" },
+      "loginTagline": "Iluminada Roxas-Mendoza Memorial High School",
+      "$note": "'Sampaguita' is a placeholder section name. Replace with the school's real section names once known — Philippine public schools usually name sections after flowers, virtues, or scientists."
+    },
+    "avoid": ["Oops!", "Something went wrong.", "Uh oh", "Awesome!", "Please try again later.", "No records found.", "Loading…"]
+  },
+
+  "accessibility": {
+    "contrast": {
+      "bodyText": "4.5:1 minimum",
+      "largeText": "3:1 minimum",
+      "uiBorders": "3:1 minimum",
+      "$note": "HIGHEST RISK AREA IN THIS DRAFT. Vibrant magenta is a contrast trap — it looks strong but sits at a mid luminance, so white text fails on anything lighter than accent.600 and dark text fails on anything darker than accent.300. Run every accent pairing through a checker before shipping, and re-run the whole set after the logo is sampled."
+    },
+    "touchTarget": {
+      "minimum": "44px",
+      "gradeEntry": "48px",
+      "$note": "Non-negotiable. Mis-tapping a grade cell and silently overwriting a score is the worst failure this product can have."
+    },
+    "focus": {
+      "ring": "{shadow.focus}",
+      "offset": "2px",
+      "$note": "Visible keyboard focus on every interactive element. Registrars are keyboard-heavy; grade encoding by tab-and-type must work perfectly."
+    },
+    "motion": "Honour prefers-reduced-motion by zeroing all durations.",
+    "language": { "htmlLang": "en-PH", "$note": "Set lang on any Filipino-language block so screen readers pronounce it correctly." },
+    "colorIndependence": "Never encode meaning in colour alone. Every attendance state has a glyph, every grade descriptor has a code (O/VS/S/FS/DNME). This is load-bearing here for two reasons beyond screen readers: the violet and magenta collapse to similar grays in print, and red-green colour blindness plus a magenta brand makes the danger/accent distinction unreliable for a meaningful share of users."
+  },
+
+  "theme": {
+    "default": "light",
+    "dark": {
+      "status": "deferred",
+      "$note": "Not in v1. Deliberate, not an oversight — a warm daytime institutional product with heavy print output does not need it, and a half-built dark theme is worse than none. Worth noting that this palette would actually shine in dark mode, since magenta glow reads best against near-dark. Build all screens from color.semantic so it stays cheap to add later."
+    }
+  }
+}
