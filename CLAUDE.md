@@ -97,6 +97,42 @@ That work belongs to Phase 4, not before.
     Phase 1 depends on it; it blocks Phase 4 (palette) and any printed form
     work in Phase 13.
 
+### 2026-08-13 — Phase 1 complete
+
+**Built:** the full repo/toolchain skeleton — Next.js 16 (App Router,
+TypeScript, Tailwind v4, Turbopack) scaffolded at repo root; `src/server/`
+boundary (`db/`, `services/`, `repositories/`, `lib/`) plus `src/types/`;
+Prettier + `prettier-plugin-tailwindcss` layered with ESLint via
+`eslint-config-prettier`; Husky pre-commit → lint-staged (verified live on
+the first commit); `.env.example` committed, `.env.local` git-ignored;
+Mongoose connection cache (`src/server/db/connect.ts`), shared schema
+options, `{ data, error }` response helper, `GET /api/health`; Vitest +
+`vite-tsconfig-paths`, one passing example test.
+
+**Live infrastructure:** MongoDB Atlas M0 cluster `irmmhs-db`, dedicated
+app DB user `irmmhs-app` (not the personal Atlas login), Network Access
+`0.0.0.0/0` (required for Vercel's non-fixed egress IPs — see playbook
+Prompt 1.5). Repo pushed to `origin/main`
+(github.com/FrancAlvenn/LMS---for-IRMMHS) and imported into Vercel.
+`/api/health` returns `dbConnected: true` **both** locally and at the
+deployed Vercel URL — Phase 1's acceptance criteria, met.
+
+**Housekeeping:** the developer handed off real Atlas credentials via two
+scratch files (`playbook/creds.md`, `playbook/atlas-credentials.env`) —
+both are now git-ignored (`.gitignore` patterns `**/creds.md`,
+`**/*credentials*`) and were never staged. Worth deleting or moving those
+two files out of the repo folder entirely once you've copied what you
+need — being git-ignored keeps them out of version control, but they're
+still plaintext on disk.
+
+**Decisions still open, unchanged from kickoff:** D1 (real vs. portfolio),
+D5 (auth mechanics), D6 (JHS vs ALS schema shape). Phase 0 fieldwork also
+still outstanding.
+
+**Next up:** Phase 2 — Config foundation (`School`, `SchoolYear`,
+`GradingPeriod` models, all school-year-scoped). Start with the Phase 2.1
+contract prompt per playbook §7 before writing any implementation.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
