@@ -24,8 +24,9 @@ operable by non-technical school staff after handover.
 - MongoDB Atlas + Mongoose
 - Tailwind CSS + shadcn/ui (shadcn not installed yet — lands in Phase 4)
 - Auth.js (credentials provider, admin-provisioned accounts) — not installed yet, Phase 3
-- Zod at every API boundary — not installed yet, lands with the first real model contract
+- Zod at every API boundary — every route handler parses with a schema from `src/types/`
 - TypeScript (D2, confirmed 2026-08-13)
+- tsx — runs one-off TS scripts (`scripts/`) with `.env.local` loaded
 - Vitest — unit tests on pure logic, colocated as `src/**/*.test.ts`
 - Playwright (chromium only) — E2E tests in `e2e/`, against Desktop Chrome and
   Mobile Chrome (Pixel 7) device projects. Added ahead of the playbook's
@@ -37,26 +38,45 @@ operable by non-technical school staff after handover.
   ```
   src/
     app/                    Next.js App Router — pages, layouts, route handlers
-      api/health/route.ts   example route handler: parse -> call service -> serialize
+      api/                  route handlers: parse -> authorize -> call service -> serialize
+      admin/                admin-only pages (unstyled until Phase 4; ungated until Phase 3)
     server/
       db/                   connect.ts (cached Mongoose connection), schemaOptions.ts
-      services/             business logic, one file per domain concept — Phase 2+
-      repositories/         data access, one file per Mongoose model — Phase 2+
-      lib/                  server-only helpers (apiResponse.ts)
-    types/                  shared TS types (domain models, API contracts) — Phase 2+
+      services/             business logic, one file per domain concept
+      repositories/         data access + Mongoose schema, one file per model
+      lib/                  server-only helpers (apiResponse, errors, routeHandler, session)
+    types/                  shared TS types + Zod schemas (domain models, API contracts)
+    hooks/                  client hooks (useSchoolYear, ...)
   e2e/                      Playwright E2E specs (*.spec.ts) — separate from Vitest
+  scripts/                  one-off TS scripts (seed.ts), run via `npm run seed` etc.
+  docs/contracts/           Habit-3 contract docs — schema/Zod/endpoints, reviewed before code
   playbook/                 project playbook + design tokens (reference, not code)
   ```
 - Naming: kebab-case folders, camelCase filenames (`schoolYear.service.ts`), PascalCase
-  for React components. One Mongoose model per file in `server/repositories/`; the
-  service file of the same domain name is the only thing allowed to import it.
+  for React components. One Mongoose model per file in `server/repositories/` (schema +
+  model + DTO mapper together); the service file of the same domain name is the only
+  thing allowed to import it. Repositories return plain DTOs (`src/types/*.ts` shapes,
+  dates as ISO strings) via an explicit `toDTO()` mapper — never a raw Mongoose
+  document or `.lean()` result.
 - Testing split: Vitest unit tests are colocated next to the code they test
-  (`src/server/lib/apiResponse.test.ts`). Playwright E2E specs live in the
-  top-level `e2e/` folder instead of being colocated — they test the app as a
+  (`src/server/lib/apiResponse.test.ts`, `src/types/schoolYear.test.ts`). Playwright
+  E2E specs live in the top-level `e2e/` folder instead — they test the app as a
   whole (real browser, real running server), not one module.
-- Every model gets: schoolYearId, createdAt, updatedAt, createdBy, updatedBy
+- Route handlers wrap their body in `handleRoute()` (`src/server/lib/routeHandler.ts`):
+  connects to the DB, catches `ZodError` -> 400, `HttpError` subclasses
+  (`NotFoundError`/`ConflictError`/`InvalidTransitionError`) -> their status, anything
+  else -> 500. A service throws `NotFoundError` etc.; it never returns a Response.
+- No auth yet (Phase 3) — every route has a `// TODO(Phase 3): requirePermission(...)`
+  comment instead of enforcement. `src/server/lib/session.ts#getCurrentUserId()` is the
+  one place that becomes real; everything that needs `createdBy`/`updatedBy` already
+  calls it, so wiring up Auth.js later is a one-file change.
+- Every SY-scoped model gets: schoolYearId, createdAt, updatedAt, createdBy, updatedBy
+  (createdBy/updatedBy nullable until Phase 3 — see above).
 - Soft delete via `archivedAt`, never hard delete academic records
-- API responses: { data, error } — never bare arrays (see src/server/lib/apiResponse.ts)
+- API responses: { data, error } — never bare arrays (see src/types/api.ts,
+  src/server/lib/apiResponse.ts)
+- State transitions that affect a sibling record (activate a school year, open/lock a
+  grading period) are their own POST action route, never a generic PATCH field edit.
 
 ## Design language
 
@@ -177,6 +197,43 @@ them, and undocumented Next.js 16 API changes are a real risk worth
 actually reading up on before writing route handlers (dynamic route
 `params` are `Promise`-typed now — see the `RouteContext<'/path/[id]'>`
 helper — and there's a new opt-in caching model called Cache Components).
+
+### 2026-08-13 — Phase 2 (Config foundation) complete
+
+Built to the reviewed contract (`docs/contracts/phase-2.1-config-foundation.md`):
+`School`, `SchoolYear`, `GradingPeriod` — Mongoose schemas + repositories + services
+
+- all 9 route handlers + Zod validators + unit tests, `getActiveSchoolYear()` +
+  `useSchoolYear()` client hook, idempotent seed script (`npm run seed`), and a bare
+  `/admin/school-years` page with an activate action (E2E-tested).
+
+**Two Next.js 16 / Mongoose 9 API changes caught by actually reading the bundled
+docs / running `tsc`, not assumed from training data:**
+
+- Dynamic route `params` are typed via the new global `RouteContext<'/path/[id]'>`
+  helper (generated by `next dev`/`next typegen`), not a hand-written
+  `{ params: Promise<{ id: string }> }`.
+- Mongoose 9 deprecates `findByIdAndUpdate(..., { new: true })` in favor of
+  `{ returnDocument: 'after' }` — caught from a runtime warning during the first
+  seed run, fixed across all three repositories.
+- Zod v4: `z.string().email()`/`.url()` are deprecated in favor of top-level
+  `z.email()`/`z.url()`; `.refine()` takes `{ error }`, not `{ message }`.
+- Added `npm run typecheck` (`tsc --noEmit`) specifically because of this class of
+  risk — ESLint alone doesn't catch it, and "breaking changes vs. training data" is
+  exactly what the Next.js agent-rules block (`AGENTS.md`) warns about.
+
+**Verified against live Atlas, not just typechecked:** seed script run twice
+(idempotency confirmed — second run skips everything), every route curled by hand
+including a validation-error path (400), a 404, and the grading-period open/lock
+state machine's invalid-transition rejections (409). E2E suite green (6/6).
+
+**School year seeded is 2026-2027, not 2025-2026** — the playbook's Phase 2 text
+illustrates "SY 2025–2026" as of when it was written, but by this repo's actual
+build date SY 2025-2026 has already ended. Seeded data (school profile + dates) is
+still the Phase 0 web-sourced hypothesis, unconfirmed — see `scripts/seed.ts` header.
+
+**Next up:** Phase 3 — Identity & access (Auth.js, real `requirePermission()`,
+replacing every `// TODO(Phase 3)` left in Phase 2's route handlers).
 
 ---
 

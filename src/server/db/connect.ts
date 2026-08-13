@@ -52,4 +52,17 @@ export async function connect(): Promise<typeof mongoose> {
   return cache.conn;
 }
 
+/**
+ * For one-off scripts (seed, migrations) that need the process to exit
+ * cleanly — Next.js route handlers never call this, since the whole point
+ * of the cache above is to keep the connection open across requests.
+ */
+export async function disconnect(): Promise<void> {
+  if (cache.conn) {
+    await cache.conn.disconnect();
+    cache.conn = null;
+    cache.promise = null;
+  }
+}
+
 export default connect;
